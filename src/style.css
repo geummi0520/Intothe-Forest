@@ -1,0 +1,29 @@
+
+html, body{
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+
+body{
+  width: 2560px;
+  height: 1400px;
+}
+
+.game-container{
+  margin: 0;
+  padding: 0;
+}
+
+canvas{
+  margin: 0;
+  padding: 0;
+}
+
+@font-face {
+  font-family: 'RoundedFixedsys';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
