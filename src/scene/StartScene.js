@@ -2,6 +2,12 @@
 import Phaser from "phaser";
 import { SCENE_KEYS } from "./SceneKeys";
 import { MAP1_ASSET_KEYS, START_ASSET_KEYS } from "../assets/AssetKeys";
+import { DungGeunMo_FONT_NAME } from "../assets/font-keys";
+
+const TEXT_STYLE = {
+  fontFamily: DungGeunMo_FONT_NAME,
+  color: "#361500",
+};
 
 export class StartScene extends Phaser.Scene {
   /** @type {Phaser.GameObjects.Image} */
@@ -14,9 +20,18 @@ export class StartScene extends Phaser.Scene {
   #startBtn;
   /** @type {Phaser.GameObjects.Image} */
   #moreBtn;
+  /** @type {Phaser.GameObjects.Rectangle} */
+  #popupOverlay;
+  /** @type {Phaser.GameObjects.Image} */
+  #popupImage;
+  /** @type {Phaser.GameObjects.Image} */
+  #popupCloseBtn;
+
+
   constructor() {
     super({ key: SCENE_KEYS.START_SCENE });
   }
+
 
   create() {
     const { width, height } = this.scale;
@@ -130,8 +145,77 @@ export class StartScene extends Phaser.Scene {
 
   // “More ...”는 추후 옵션/크레딧 서브메뉴로 연결
   #openMore() {
-    // 임시로 살짝 흔들기만
-    this.cameras.main.shake(150, 0.003);
-    // 추후: this.scene.start(SCENE_KEYS.OPTIONS_SCENE) 등으로 분기
+    const { width, height } = this.scale;
+
+    // 1) 화면 어둡게 하는 오버레이 (반투명 검정)
+    this.#popupOverlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.7)
+      .setOrigin(0)
+      .setDepth(20)
+      .setScrollFactor(0)
+      .setInteractive(); // 클릭 이벤트 막기 위해
+  
+    // 2) 팝업 이미지 (적절한 키로 교체)
+    this.#popupImage = this.add.image(width / 2, height / 2, START_ASSET_KEYS.MORE_POPUP)
+      .setDepth(21)
+      .setOrigin(0.5)
+      .setScale(0.5);
+
+
+    // 닫기 버튼
+    const btnWidth = 230;
+    const btnHeight = 65;
+    const centerX = width / 2; // 중앙 X
+    const centerY = height - 250; // 중앙 Y
+
+    const btnRect = this.add.graphics();
+    btnRect.fillStyle(0xA97D61, 1);
+
+    // 1. Graphics 객체의 위치를 버튼 중앙으로 설정 (Origin 0.5, 0.5를 설정한 효과)
+    btnRect.setPosition(centerX, centerY);
+
+    // 2. fillRoundedRect의 좌표는 Graphics의 (0, 0)을 기준으로 다시 계산
+    //    새로운 좌상단 X = -btnWidth / 2 = -90
+    //    새로운 좌상단 Y = -btnHeight / 2 = -32.5
+    btnRect.fillRoundedRect(
+      -btnWidth / 2, // -90
+      -btnHeight / 2, // -32.5
+      btnWidth,
+      btnHeight,
+      30
+    ).setDepth(50);
+
+    // setInteractive와 트윈은 그대로 사용 (위치 보정 완료)
+    btnRect.setInteractive(
+      new Phaser.Geom.Rectangle(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight), // setPosition으로 원점이 (0,0)으로 이동했으므로 hitArea도 변경
+      Phaser.Geom.Rectangle.Contains
+    );
+    btnRect.input.cursor = 'pointer'; 
+
+    // 텍스트 위치도 Graphics 중앙에 맞춥니다.
+    const btnText = this.add.text(centerX, centerY, "닫기", {
+      ...TEXT_STYLE,
+      fontSize: "30px",
+      color: "#ffffff",
+    }).setOrigin(0.5, 0.5) // Origin 0.5, 0.5로 설정되어 중앙에 위치
+    .setDepth(51);
+  
+  
+    // 닫기 버튼 클릭 시 팝업 및 오버레이 제거
+    btnRect.on('pointerup', () => {
+      this.tweens.add({
+        targets: btnRect,
+        scaleX: 0.97,
+        scaleY: 0.97,
+        duration: 80,
+        yoyo: true,
+        onComplete: () => {
+          this.#popupImage?.destroy();
+          this.#popupOverlay?.destroy();
+          btnRect.destroy();  // 그래픽 제거
+          btnText.destroy(); 
+        },
+      });
+    });
   }
+  
 }

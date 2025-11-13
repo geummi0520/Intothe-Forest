@@ -10,6 +10,7 @@ export const START_ASSET_KEYS = Object.freeze({
     LOGO: 'LOGO',
     START_BTN: 'START_BTN',
     MORE_BTN: 'MORE_BTN',
+    MORE_POPUP: 'MORE_POPUP',
 });
 
 export const END_ASSET_KEYS = Object.freeze({

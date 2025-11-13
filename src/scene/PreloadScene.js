@@ -16,6 +16,7 @@ export class PreloadScene extends Phaser.Scene{
       // 맵1-고향맵 assets
       this.load.image(INTRO_ASSET_KEYS.INTRO_BACKGROUND, '/assets/sky_bg.png');
       this.load.image(INTRO_ASSET_KEYS.INTRO_BASKET, '/assets/basket.png');
+      this.load.image(START_ASSET_KEYS.MORE_POPUP, '/assets/more_popup.png');
       
       // 맵1-고향맵 assets
       this.load.image(MAP1_ASSET_KEYS.FIRST_MAP, '/assets/maps/TMap1.png');
