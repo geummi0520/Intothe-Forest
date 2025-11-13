@@ -124,7 +124,7 @@ export class StartScene extends Phaser.Scene {
     if (this.#onResize) this.scale.off("resize", this.#onResize);
     this.cameras.main.fadeOut(250, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.scene.start(SCENE_KEYS.FIRST_MAP, { intro: true });
+      this.scene.start(SCENE_KEYS.INTRO_SCENE, { intro: true });
     });
   }
 
