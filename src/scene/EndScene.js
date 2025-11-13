@@ -29,14 +29,14 @@ export class EndScene extends Phaser.Scene {
     this.#fog = this.add.rectangle(width/2, height/2, width, height, 0xffffff, 0.5);
 
     // 3) 타이틀 - this.#title로 저장
-    this.#title = this.add.image(width / 2, height * 0.38, END_ASSET_KEYS.END_LOGO).setOrigin(0.5);   
+    this.#title = this.add.image(width / 2, height * 0.42, END_ASSET_KEYS.END_LOGO).setOrigin(0.5);   
     // 살짝 등장 애니메이션
     this.#title.setScale(0.92);
     this.tweens.add({ targets: this.#title, scale: 1, duration: 350, ease: "back.out" });
 
     // 4) 버튼 생성 (Start / More ...) - this.#startBtn, this.#moreBtn로 저장
     this.#startBtn = this.#makeImageButton(
-        width/2, height*0.55,
+        width/2, height*0.60,
         {
           normal: END_ASSET_KEYS.RESTART_BTN,
         },

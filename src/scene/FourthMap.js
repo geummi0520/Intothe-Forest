@@ -58,6 +58,10 @@ export class FourthMap extends Phaser.Scene {
     _canExit = false;      // 이 맵에서 아이템 수집 완료했는지
     _isTransitioning = false; // 씬 전환 중인지(중복 방지)
 
+    /** @type {Phaser.Geom.Rectangle[]} */
+    #entryAreas = [];             // 출구 영역
+    _canEntry = false;      // 이 맵에서 아이템 수집 완료했는지
+
     constructor(){
       super({
           key: SCENE_KEYS.FOURTH_MAP
@@ -96,6 +100,7 @@ export class FourthMap extends Phaser.Scene {
 
         // create npcs
         this.#createNPCs(map);
+        this.#createEntryAreas(map);
 
         // 기본 시작점 (Tiled에서 잡은 SecondMap 입구 근처 좌표로 맞춰줘)
         const defaultSpawnPos = { x: 23 * TILE_SIZE, y: 19 * TILE_SIZE };
@@ -192,6 +197,8 @@ export class FourthMap extends Phaser.Scene {
       this.#dialogUi.showNextMessage();
       return;
     }
+
+    this.#checkEntry();
 
     const EPS = TILE_SIZE * 1.5; // 앞칸 허용 반경 (원하면 0.5~1.0 사이로 조정)
     const nearbyNpc = this.#npcs.find((npc) =>
@@ -436,64 +443,107 @@ if (this.#npcs.length === 0) {
       });
   }
 
+  // _showTicketSequence() {
+  //   // 오버레이
+  //   const overlay = this.add.rectangle(0, 0, this.cameras.main.width, this.cameras.main.height, 0x000000, 0.7)
+  //     .setOrigin(0)
+  //     .setScrollFactor(0)
+  //     .setDepth(1);
+  
+  //   const startX = 100;
+  //   const startY = this.cameras.main.height - 100;
+  //   const centerX = this.cameras.main.centerX;
+  //   const centerY = this.cameras.main.centerY;
+  
+  //   // 1. 컨테이너 생성, 시작 위치에 둠
+  //   const groupContainer = this.add.container(startX, startY).setDepth(1000).setAlpha(0.2).setScale(0.3);
+  
+  //   // 2. 티켓 이미지 추가 (컨테이너 내부 좌표 0,0 기준)
+  //   const ticketImage = this.add.image(0, 0, MAP4_ASSET_KEYS.TICKET).setOrigin(0.5);
+  //   groupContainer.add(ticketImage);
+  
+  //   // 3. 인벤토리 아이템 3개 추가 (컨테이너 내 좌표 기준으로 티켓 위쪽 등 위치 조정)
+  //   const inventory = this.#getInventory();
+  //   const spacing = 20;
+  //   inventory.forEach((item, idx) => {
+  //     if (!item.img) return;
+
+  //     const icon = this.add
+  //       .image(startX, startY+ spacing * idx, item.img)
+  //       .setOrigin(0.5)
+  //       .setRotation(Phaser.Math.DegToRad(6))
+  //       .setScale(4);
+  //       groupContainer.add(icon);
+  //   });
+  
+  //   // 4. 그룹 컨테이너를 중앙으로 트윈 애니메이션 (함께 이동+확대+불투명)
+  //   this.tweens.add({
+  //     targets: groupContainer,
+  //     x: centerX,
+  //     y: centerY,
+  //     scale: 1,
+  //     alpha: 1,
+  //     duration: 750,
+  //     ease: 'Back.Out',
+  //     onComplete: () => {
+        
+  //       // 도착 후 대사 보여주고 씬 전환 등 처리
+  //       this.time.delayedCall(100, () => this.#dialogUi.showDialogModal([
+  //         '항공권을 받았다!',
+  //         '이번 여정을 마무리하고 다음 여정으로 가볼까?'
+  //       ], {
+  //         onComplete: () => {
+  //           overlay.destroy();
+  //           groupContainer.destroy();
+  //           this.#goToNextMap();
+  //         }
+  //       }));
+  //     }
+  //   });
+  // }  
+  
   _showTicketSequence() {
-    // 오버레이
+    // 1. 오버레이 추가
     const overlay = this.add.rectangle(0, 0, this.cameras.main.width, this.cameras.main.height, 0x000000, 0.7)
       .setOrigin(0)
       .setScrollFactor(0)
-      .setDepth(1);
-  
+      .setDepth(999);
+    
+    // 2. 티켓 이미지: 화면 왼쪽 하단에서 아주 작고 투명하게 시작
     const startX = 100;
     const startY = this.cameras.main.height - 100;
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
-  
-    // 1. 컨테이너 생성, 시작 위치에 둠
-    const groupContainer = this.add.container(startX, startY).setDepth(1000).setAlpha(0.2).setScale(0.3);
-  
-    // 2. 티켓 이미지 추가 (컨테이너 내부 좌표 0,0 기준)
-    const ticketImage = this.add.image(0, 0, MAP4_ASSET_KEYS.TICKET).setOrigin(0.5);
-    groupContainer.add(ticketImage);
-  
-    // 3. 인벤토리 아이템 3개 추가 (컨테이너 내 좌표 기준으로 티켓 위쪽 등 위치 조정)
-    const inventory = this.#getInventory();
-    const spacing = 20;
-    inventory.forEach((item, idx) => {
-      if (!item.img) return;
+    const ticketImage = this.add.image(startX, startY, MAP4_ASSET_KEYS.TICKET)
+      .setOrigin(0.5)
+      .setScale(0.3)
+      .setAlpha(0.2)
+      .setDepth(1000);
 
-      const icon = this.add
-        .image(startX, startY+ spacing * idx, item.img)
-        .setOrigin(0.5)
-        .setRotation(Phaser.Math.DegToRad(6))
-        .setScale(4);
-        groupContainer.add(icon);
-    });
+    this.time.delayedCall(200, () => this.#renderItems() );
   
-    // 4. 그룹 컨테이너를 중앙으로 트윈 애니메이션 (함께 이동+확대+불투명)
+    // 3. 트윈 애니메이션: 티켓이 중앙으로 이동하며 커지고 불투명
     this.tweens.add({
-      targets: groupContainer,
+      targets: ticketImage,
       x: centerX,
       y: centerY,
       scale: 1,
       alpha: 1,
-      duration: 750,
-      ease: 'Back.Out',
+      duration: 650,      // 빠르거나 느리게 조절 가능
+      ease: 'Back.Out',   // 팡! 하고 튀어나오는 느낌
       onComplete: () => {
-        
         // 도착 후 대사 보여주고 씬 전환 등 처리
-        this.time.delayedCall(100, () => this.#dialogUi.showDialogModal([
+        this.time.delayedCall(400, () => this.#dialogUi.showDialogModal([
           '항공권을 받았다!',
           '이번 여정을 마무리하고 다음 여정으로 가볼까?'
         ], {
           onComplete: () => {
-            overlay.destroy();
-            groupContainer.destroy();
             this.#goToNextMap();
           }
         }));
       }
     });
-  }  
+  }
   
 
   // 인벤토리 읽기
@@ -501,32 +551,135 @@ if (this.#npcs.length === 0) {
     return dataManager.store.get(DATA_MANAGER_STORE_KEYS.INVENTORY) || [];
   }
 
-  // 인벤토리 UI 그리기
-  #renderItems() {
-    // 기존 아이콘들 싹 제거
-    this.#inventoryIcons.forEach(icon => icon.destroy());
-    this.#inventoryIcons = [];
+  // // 인벤토리 UI 그리기
+  // #renderItems() {
+  //   // 기존 아이콘들 싹 제거
+  //   this.#inventoryIcons.forEach(icon => icon.destroy());
+  //   this.#inventoryIcons = [];
 
-    const inventory = this.#getInventory();
-    console.log(inventory);
-    if (!inventory.length) return;
+  //   const inventory = this.#getInventory();
+  //   console.log(inventory);
+  //   if (!inventory.length) return;
 
-    // 아이콘 시작 위치 + 간격 (숫자는 지금 쓰고 있던 좌표 기준으로 대충 맞춰둔 값)
-    const startX = 1740;
-    const startY = 406;
-    const spacing = 20;
+  //   // 아이콘 시작 위치 + 간격 (숫자는 지금 쓰고 있던 좌표 기준으로 대충 맞춰둔 값)
+  //   const startX = 1740;
+  //   const startY = 416;
+  //   const spacingX = 10;
+  //   const spacingY = 75;
 
-    inventory.forEach((item, idx) => {
-      if (!item.img) return;
+  //   inventory.forEach((item, idx) => {
+  //     if (!item.img) return;
 
-      const icon = this.add
-        .image(startX, startY+ spacing * idx, item.img)
-        .setOrigin(0)
-        .setRotation(Phaser.Math.DegToRad(6))
-        .setScale(4);
+  //     const icon = this.add
+  //       .image(startX + spacingX * idx, startY+ spacingY * idx, item.img)
+  //       .setOrigin(0)
+  //       .setRotation(Phaser.Math.DegToRad(-6))
+  //       .setDepth(1001)
+  //       .setScale(4);
 
-      this.#inventoryIcons.push(icon);
+  //     this.#inventoryIcons.push(icon);
+  //   });
+  // }
+
+  // 인벤토리 UI 그리기 (서서히 나타나는 효과 추가)
+#renderItems() {
+  // 기존 아이콘들 싹 제거
+  this.#inventoryIcons.forEach(icon => icon.destroy());
+  this.#inventoryIcons = [];
+
+  const inventory = this.#getInventory();
+  console.log(inventory);
+  if (!inventory.length) return;
+
+  // 아이콘 시작 위치 + 간격
+  const startX = 1740;
+  const startY = 396;
+  const spacingX = 10;
+  const spacingY = 75;
+
+  inventory.forEach((item, idx) => {
+    if (!item.img) return;
+
+    const icon = this.add
+      .image(startX + spacingX * idx, startY + spacingY * idx, item.img)
+      .setOrigin(0)
+      .setRotation(Phaser.Math.DegToRad(-6))
+      .setDepth(1001)
+      .setScale(4)
+      .setAlpha(0);     // 초기엔 투명한 상태로 시작
+
+    this.#inventoryIcons.push(icon);
+
+    // 투명도 0 → 1 서서히 페이드인 애니메이션 추가
+    this.tweens.add({
+      targets: icon,
+      alpha: 1,
+      duration: 600,
+      ease: 'Linear',
     });
+  });
+}
+
+
+
+  /**
+   * EXIT 오브젝트 레이어의 모든 object를 출구 영역으로 사용
+   * @param {Phaser.Tilemaps.Tilemap} map
+   */
+  #createEntryAreas(map) {
+    const entryLayer = map.getObjectLayer('entry');
+    if (!entryLayer) {
+      console.warn('[FirstMap] ENTRY object layer 없음');
+      return;
+    }
+
+    const MAP_SCALE = 4;
+
+    // EXIT 레이어에 있는 모든 object를 순회
+    entryLayer.objects.forEach((obj) => {
+      if (obj.x == null || obj.y == null) return;
+
+      // Tiled에서 tile object(gid가 있는 애들)는
+      // x = 왼쪽, y = "바닥" 기준 + height 값 있음
+      const width = obj.width || 16;
+      const height = obj.height || 16;
+
+      const worldX = obj.x * MAP_SCALE;
+      const worldY = (obj.y - height) * MAP_SCALE;  // 바닥 기준이니까 height만큼 위로
+      const worldW = width * MAP_SCALE;
+      const worldH = height * MAP_SCALE;
+
+      const rect = new Phaser.Geom.Rectangle(worldX, worldY, worldW, worldH);
+      this.#entryAreas.push(rect);
+    });
+
+    if (this.#entryAreas.length === 0) {
+      console.warn('[First] ENTRY 오브젝트가 하나도 없음');
+    }
+
+    // 디버그용: 출구 영역 시각화하고 싶으면 주석 풀기
+    // const g = this.add.graphics().setDepth(1000);
+    // g.lineStyle(2, 0xff0000);
+    // this.#exitAreas.forEach(r => g.strokeRectShape(r));
+  }
+
+  #checkEntry() {
+    if (!this.#entryAreas.length || !this.#player) return;
+  
+    const { x, y } = this.#player.sprite;
+  
+    // 플레이어가 어느 출구 영역 안에라도 들어가면 true
+    const isInEntry = this.#entryAreas.some(rect =>
+      Phaser.Geom.Rectangle.Contains(rect, x, y)
+    );
+  
+    if (!isInEntry) return;
+    if (this._isTransitioning) return;
+    
+    this.#dialogUi.showDialogModal([
+      '한 번 떠나온 곳으로는 다시 돌아갈 수 없어요.'
+    ]);
+    return;
   }
 
   

@@ -286,7 +286,7 @@ export class SecondMap extends Phaser.Scene {
                 {
                   label: '아니오',
                   onSelect: () => {
-                    this.#dialogUi.showDialogModal(['아쉽네.. 다음에 들려줄게!']);
+                    this.#dialogUi.showDialogModal(['아쉽네요.. 다음에 들려드릴게요.']);
                   }
                 }
               ],
