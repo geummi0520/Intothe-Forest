@@ -228,6 +228,8 @@ export class SecondMap extends Phaser.Scene {
     const targetPosition = getTargetPositionFromGameObject({ x, y }, this.#player.direction);
 
     if (this.#dialogUi.isAnimationPlaying) {
+      console.log("스페이스바눌림");
+      this.#dialogUi.showFullTextImmediately();
       return;
     }
 
@@ -240,6 +242,12 @@ export class SecondMap extends Phaser.Scene {
       this.#dialogUi.showNextMessage();
       return;
     }
+
+    // 4. 애니메이션이 완료되었고, 다음 메시지가 남아있을 때: 다음 메시지 로드
+    if (this.#dialogUi.moreMessagesToShow) {
+      this.#dialogUi.showNextMessage();
+      return;
+}
 
     const EPS = TILE_SIZE * 1.5; // 앞칸 허용 반경 (원하면 0.5~1.0 사이로 조정)
     const nearbyNpc = this.#npcs.find((npc) =>

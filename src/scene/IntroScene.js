@@ -73,6 +73,8 @@ export class IntroScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.#spaceKey)) {
       // 1) 글자 애니메이션 중이면 일단 무시 (혹시 스킵 기능 만들고 싶으면 여기에서 처리)
       if (this.#dialogUi.isAnimationPlaying) {
+        console.log("스페이스바눌림");
+        this.#dialogUi.showFullTextImmediately();
         return;
       }
 
@@ -86,6 +88,8 @@ export class IntroScene extends Phaser.Scene {
       if (this.#dialogUi.isVisible) {
         this.#dialogUi.hideDialogModal();
       }
+
+      
     }
   }
 }

@@ -34,6 +34,10 @@ export class DialogUi {
   #textAnimationPlaying;
   /** @type {string[]} */
   #messagesToShow;
+  /** @type {any} */ // 실제 animateText 반환 타입에 맞게 조정 필요
+  #currentAnimateEvent
+  /** @type {string} */
+  #currentText; // 현재 표시해야 할 전체 메시지 저장
   
 
   constructor(scene, width) {
@@ -76,6 +80,17 @@ export class DialogUi {
       top:  cam.height - 250, 
       lineHeight: 60
     };
+
+    // 예: 씬 생성자 혹은 적절한 초기화 함수에 추가
+
+    if (Phaser.Input.Keyboard.KeyCodes.SPACE) {
+      if (this.#textAnimationPlaying) {
+        this.showFullTextImmediately();
+      } else if (this.moreMessagesToShow) {
+        this.showNextMessage();
+      }
+    }
+  
   }
 
   // 내부 렌더 헬퍼: 라인 텍스트에 > 표시 적용
@@ -239,17 +254,16 @@ get isVisible() {
    * @returns {void}
    */
   showNextMessage() {
-    if (this.#messagesToShow.length === 0) {
-      return;
-    }
-
+    if (this.#messagesToShow.length === 0) return;
     this.#uiText.setText('').setAlpha(1);
+    this.#userInputCursor.setVisible(false); // 애니메이션 시작 시 커서 숨김
 
-    animateText(this.#scene, this.#uiText, this.#messagesToShow.shift(), {
+    const currentText = this.#messagesToShow.shift();
+    this.#currentText = currentText; // 현재 메시지 저장
+
+    this.#currentAnimateEvent = animateText(this.#scene, this.#uiText, currentText, {
       delay: 50,
-      callback: () => {
-        this.#textAnimationPlaying = false;
-      },
+      callback: () => { this.#textAnimationPlaying = false; this.#userInputCursor.setVisible(true); },
     });
     this.#textAnimationPlaying = true;
   }
@@ -288,6 +302,23 @@ get isVisible() {
     this.#userInputCursorTween.pause();
     this.#container.add(this.#userInputCursor);
   }
+
+  showFullTextImmediately() {
+    if (!this.#textAnimationPlaying) return;
+
+    // 1. 현재 실행 중인 TimerEvent 중지
+    if (this.#currentAnimateEvent && this.#currentAnimateEvent.remove) {
+      this.#currentAnimateEvent.remove(false); // 'false'는 완료 콜백을 실행하지 않음
+    }
+    
+    // 2. 전체 텍스트를 즉시 표시
+    this.#uiText.setText(this.#currentText);
+
+    // 3. 상태 업데이트 및 커서 보이기
+    this.#textAnimationPlaying = false;
+    this.#userInputCursor.setVisible(true); // 입력 대기 커서 보임
+  }
+  
 
 
 }

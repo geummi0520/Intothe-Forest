@@ -13,22 +13,24 @@ import { SCENE_KEYS } from "../scene/SceneKeys";
  * @param {Phaser.GameObjects.Text} target the Phaser 3 Text Game Object that will be animated
  * @param {string} text the text to display on the target game object
  * @param {AnimateTextConfig} [config]
- * @returns {void}
+ * @returns {Phaser.Time.TimerEvent}
  */
 export function animateText(scene, target, text, config) {
   const length = text.length;
   let i = 0;
-  scene.time.addEvent({
+  target.text = ''; // 초기화
+  const timedEvent = scene.time.addEvent({
     callback: () => {
       target.text += text[i];
       ++i;
-      if (i === length - 1 && config?.callback) {
+      if (i === length && config?.callback) {
         config.callback();
       }
     },
     repeat: length - 1,
     delay: config?.delay || 25,
   });
+  return timedEvent;
 }
 
 export const MAP1_INTRO_TEXT = ["고향처럼 정겨운 느낌의 마을이다.", "마을을 돌아다니며 뭐가 있는지 확인해보자!"];

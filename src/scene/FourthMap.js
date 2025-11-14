@@ -185,6 +185,8 @@ export class FourthMap extends Phaser.Scene {
     const targetPosition = getTargetPositionFromGameObject({ x, y }, this.#player.direction);
 
     if (this.#dialogUi.isAnimationPlaying) {
+      console.log("스페이스바눌림");
+      this.#dialogUi.showFullTextImmediately();
       return;
     }
 
@@ -194,6 +196,12 @@ export class FourthMap extends Phaser.Scene {
     }
 
     if (this.#dialogUi.isVisible && this.#dialogUi.moreMessagesToShow) {
+      this.#dialogUi.showNextMessage();
+      return;
+    }
+
+    // 4. 애니메이션이 완료되었고, 다음 메시지가 남아있을 때: 다음 메시지 로드
+    if (this.#dialogUi.moreMessagesToShow) {
       this.#dialogUi.showNextMessage();
       return;
     }
@@ -520,7 +528,7 @@ if (this.#npcs.length === 0) {
       .setAlpha(0.2)
       .setDepth(1000);
 
-    this.time.delayedCall(200, () => this.#renderItems() );
+    this.time.delayedCall(300, () => this.#renderItems() );
   
     // 3. 트윈 애니메이션: 티켓이 중앙으로 이동하며 커지고 불투명
     this.tweens.add({
@@ -529,7 +537,7 @@ if (this.#npcs.length === 0) {
       y: centerY,
       scale: 1,
       alpha: 1,
-      duration: 650,      // 빠르거나 느리게 조절 가능
+      duration: 600,      // 빠르거나 느리게 조절 가능
       ease: 'Back.Out',   // 팡! 하고 튀어나오는 느낌
       onComplete: () => {
         // 도착 후 대사 보여주고 씬 전환 등 처리
@@ -616,6 +624,7 @@ if (this.#npcs.length === 0) {
       alpha: 1,
       duration: 600,
       ease: 'Linear',
+      delay: 230 * idx,
     });
   });
 }
