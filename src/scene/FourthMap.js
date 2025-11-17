@@ -259,7 +259,7 @@ export class FourthMap extends Phaser.Scene {
                   }
                 },
                 {
-                  label: '아니오',
+                  label: '아니오', 
                   onSelect: () => {
                     this.time.delayedCall(100, () => {
                       this.#dialogUi.showDialogModal(['즐거운 삶이기도 하셨나요?', '탑승권 준비해드리겠습니다. 다음 여정도 즐거운 삶 되시길 바랍니다.'], {
