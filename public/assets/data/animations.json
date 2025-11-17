@@ -5,7 +5,7 @@
         "frameRate": 6,
         "repeat": -1,
         "delay": 0,
-        "yoyo": true,
+        "yoyo": false,
         "assetKey": "PLAYER"
     },
     {
@@ -14,7 +14,7 @@
         "frameRate": 6,
         "repeat": -1,
         "delay": 0,
-        "yoyo": true,
+        "yoyo": false,
         "assetKey": "PLAYER"
     },
     {
@@ -23,7 +23,7 @@
         "frameRate": 6,
         "repeat": -1,
         "delay": 0,
-        "yoyo": true,
+        "yoyo": false,
         "assetKey": "PLAYER"
     },
     {
@@ -32,7 +32,7 @@
         "frameRate": 6,
         "repeat": -1,
         "delay": 0,
-        "yoyo": true,
+        "yoyo": false,
         "assetKey": "PLAYER"
     }
 ]

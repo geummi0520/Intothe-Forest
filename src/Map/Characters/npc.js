@@ -15,6 +15,10 @@ export class NPC extends Character {
   #messages;
   /** @type {boolean} */
   #talkingToPlayer;
+  /** @type {Phaser.Time.TimerEvent | null} */
+  #blinkTimer = null;
+  /** @type {boolean} */
+  #eyeOpen = true;
 
   /**
    * @param {NPCConfig} config
@@ -37,6 +41,7 @@ export class NPC extends Character {
 
     this.#messages = config.messages;
     this.#talkingToPlayer = false;
+    this.startBlinking();
   }
 
   /** @type {string[]} */
@@ -55,6 +60,38 @@ export class NPC extends Character {
   //   set isTalkingToPlayer(val) {
   //     this.#talkingToPlayer = val;
   // }
+
+  startBlinking() {
+    if (!this._phaserGameObject || !this._idleFrameConfig) return;
+
+    // 기존에 이미 타이머가 있다면 제거
+    if (this.#blinkTimer) {
+      this.#blinkTimer.remove(false);
+      this.#blinkTimer = null;
+    }
+
+    // 1초마다 눈 깜빡임 토글
+    this.#blinkTimer = this._phaserGameObject.scene.time.addEvent({
+      delay: 900,
+      loop: true,
+      callback: () => {
+        this.#eyeOpen = !this.#eyeOpen;
+
+        // 기본 방향 DOWN 기준으로 눈 뜬/감은 프레임 토글 구현 (필요하면 방향에 맞게 확장 가능)
+        const baseFrame = this._idleFrameConfig.DOWN;
+        const blinkFrame = baseFrame + 1; // 감은 눈 프레임이 baseFrame + 1 이라고 가정할 때
+
+        this._phaserGameObject.setFrame(this.#eyeOpen ? baseFrame : blinkFrame);
+      },
+    });
+  }
+
+  stopBlinking() {
+    if (this.#blinkTimer) {
+      this.#blinkTimer.remove(false);
+      this.#blinkTimer = null;
+    }
+  }
 
   /**
    * @param {import('../../common/direction.js').Direction} playerDirection

@@ -583,7 +583,7 @@ if (this.#npcs.length === 0) {
       // SecondMap에서 시작할 위치 (월드 좌표 기준)
       const spawnPosition = {
         x: 26.5 * TILE_SIZE, // 예시: 타일 32,1짜리 위치 같은 식으로 맞춰줘
-        y: 19.5 * TILE_SIZE,
+        y: 19 * TILE_SIZE,
       };
   
       this.scene.start(SCENE_KEYS.SECOND_MAP, {

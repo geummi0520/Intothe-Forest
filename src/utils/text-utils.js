@@ -36,5 +36,5 @@ export function animateText(scene, target, text, config) {
 export const MAP1_INTRO_TEXT = ["고향처럼 정겨운 느낌의 마을이다.", "마을을 돌아다니며 뭐가 있는지 확인해보자!"];
 export const MAP2_INTRO_TEXT = ["우와 넓은 공원이네!", "산책하기 좋을 것 같아."];
 export const MAP3_INTRO_TEXT = ["울창한 숲이네.", "무언가 숨겨져 있을 것 같아!"];
-export const MAP4_INTRO_TEXT = ["..뭐지? 공항이다.", "저기 직원에게 말을 걸어볼까?"];
+export const MAP4_INTRO_TEXT = ["..뭐지? 공항이다.", "카운터에 있는 직원에게 말을 걸어볼까?"];
 export const SAMPLE_TEXT = '대화할 마음이 없어 보인다.';

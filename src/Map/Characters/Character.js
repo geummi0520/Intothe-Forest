@@ -73,6 +73,8 @@ export class Character {
       this._getIdleFrame()
     ).setOrigin(this._origin.x, this._origin.y).setScale(4);
     this._spriteGridMovementFinishedCallback = config.spriteGridMovementFinishedCallback;
+
+    
   }
 
   /** @type {Phaser.GameObjects.Sprite} */

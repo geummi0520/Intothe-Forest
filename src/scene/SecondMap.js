@@ -60,6 +60,10 @@ export class SecondMap extends Phaser.Scene {
     _canExit = false;      // 이 맵에서 아이템 수집 완료했는지
     _isTransitioning = false; // 씬 전환 중인지(중복 방지)
 
+    /** @type {Phaser.Geom.Rectangle[]} */
+    #entryAreas = [];             // 출구 영역
+    _canEntry = false;      // 이 맵에서 아이템 수집 완료했는지
+
     constructor(){
       super({
           key: SCENE_KEYS.SECOND_MAP
@@ -87,7 +91,7 @@ export class SecondMap extends Phaser.Scene {
             console.log(`[${SecondMap.name}:create] collision tileset error`);
             return;
         }
-        const collisionLayer = map.createLayer('Collision', collisionTiles, 0, 0);
+        const collisionLayer = map.createLayer('Collision', collisionTiles, 0, -TILE_SIZE);
         if (!collisionLayer){
             console.log(`[${SecondMap.name}:create] collision layer error`);
             return;
@@ -122,6 +126,7 @@ export class SecondMap extends Phaser.Scene {
         // create npcs
         this.#createNPCs(map);
         this.#createExitAreas(map);
+        this.#createEntryAreas(map);
 
         // 기본 시작점 (Tiled에서 잡은 SecondMap 입구 근처 좌표로 맞춰줘)
         const defaultSpawnPos = { x: 26.5 * TILE_SIZE, y: 19.5 * TILE_SIZE };
@@ -393,6 +398,8 @@ export class SecondMap extends Phaser.Scene {
 
     // ✅ 1) 출구 체크는 항상 수행
     this.#checkExit();
+    this.#checkEntry();
+
 
     // const tile = this.#encounterLayer.getTileAtWorldXY(
     //     this.#player.sprite.x,
@@ -647,5 +654,65 @@ if (this.#npcs.length === 0) {
   }
 
   
+  /**
+   * EXIT 오브젝트 레이어의 모든 object를 출구 영역으로 사용
+   * @param {Phaser.Tilemaps.Tilemap} map
+   */
+  #createEntryAreas(map) {
+    const entryLayer = map.getObjectLayer('entry');
+    if (!entryLayer) {
+      console.warn('[FirstMap] ENTRY object layer 없음');
+      return;
+    }
+
+    const MAP_SCALE = 4;
+
+    // EXIT 레이어에 있는 모든 object를 순회
+    entryLayer.objects.forEach((obj) => {
+      if (obj.x == null || obj.y == null) return;
+
+      // Tiled에서 tile object(gid가 있는 애들)는
+      // x = 왼쪽, y = "바닥" 기준 + height 값 있음
+      const width = obj.width || 16;
+      const height = obj.height || 16;
+
+      const worldX = obj.x * MAP_SCALE;
+      const worldY = (obj.y - height) * MAP_SCALE;  // 바닥 기준이니까 height만큼 위로
+      const worldW = width * MAP_SCALE;
+      const worldH = height * MAP_SCALE;
+
+      const rect = new Phaser.Geom.Rectangle(worldX, worldY, worldW, worldH);
+      this.#entryAreas.push(rect);
+    });
+
+    if (this.#entryAreas.length === 0) {
+      console.warn('[First] ENTRY 오브젝트가 하나도 없음');
+    }
+
+    // 디버그용: 출구 영역 시각화하고 싶으면 주석 풀기
+    // const g = this.add.graphics().setDepth(1000);
+    // g.lineStyle(2, 0xff0000);
+    // this.#exitAreas.forEach(r => g.strokeRectShape(r));
+  }
+
+  #checkEntry() {
+    if (!this.#entryAreas.length || !this.#player) return;
+  
+    const { x, y } = this.#player.sprite;
+  
+    // 플레이어가 어느 출구 영역 안에라도 들어가면 true
+    const isInEntry = this.#entryAreas.some(rect =>
+      Phaser.Geom.Rectangle.Contains(rect, x, y)
+    );
+  
+    if (!isInEntry) return;
+    if (this._isTransitioning) return;
+    
+    this.#dialogUi.showDialogModal([
+      '한 번 떠나온 곳으로는 다시 돌아갈 수 없어요.'
+    ]);
+    return;
+  }
+
 
 };
