@@ -62,7 +62,13 @@ class DataManager extends Phaser.Events.EventEmitter {
       [DATA_MANAGER_STORE_KEYS.MAP2_WELCOME_KEY]: false,
       [DATA_MANAGER_STORE_KEYS.MAP3_WELCOME_KEY]: false,
       [DATA_MANAGER_STORE_KEYS.MAP4_WELCOME_KEY]: false,
+      [DATA_MANAGER_STORE_KEYS.INVENTORY]: [],
     });
+  }
+
+  reset() {
+    this.#updateDataManger(initialState);
+    this.#store.set(DATA_MANAGER_STORE_KEYS.INVENTORY, []);  // 인벤토리도 초기화
   }
 }
 

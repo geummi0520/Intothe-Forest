@@ -16,20 +16,32 @@ import { SCENE_KEYS } from "../scene/SceneKeys";
  * @returns {Phaser.Time.TimerEvent}
  */
 export function animateText(scene, target, text, config) {
-  const length = text.length;
+  const chars = Array.from(text);
+  const length = chars.length;
   let i = 0;
+
   target.text = ''; // 초기화
+
   const timedEvent = scene.time.addEvent({
     callback: () => {
-      target.text += text[i];
-      ++i;
+      // 2. 안전한 문자 배열(chars)에서 문자를 가져와 추가
+      if (i < length) {
+          target.text += chars[i];
+          ++i;
+      }
+      
+      // 3. 마지막 문자 출력 후 콜백 호출
       if (i === length && config?.callback) {
+        // 콜백은 반복이 끝난 후 한 번만 호출되도록 변경
+        timedEvent.destroy(); // 이벤트 중지 및 파괴
         config.callback();
       }
     },
-    repeat: length - 1,
+    // repeat: length - 1, // 'repeat' 대신 콜백 내에서 `i`와 `length`를 비교하여 처리하는 것이 더 명확합니다.
+    loop: true, // 무한 반복으로 설정 후, 콜백에서 `destroy()`로 중지
     delay: config?.delay || 25,
   });
+  
   return timedEvent;
 }
 

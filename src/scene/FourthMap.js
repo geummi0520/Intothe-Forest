@@ -185,7 +185,6 @@ export class FourthMap extends Phaser.Scene {
     const targetPosition = getTargetPositionFromGameObject({ x, y }, this.#player.direction);
 
     if (this.#dialogUi.isAnimationPlaying) {
-      console.log("스페이스바눌림");
       this.#dialogUi.showFullTextImmediately();
       return;
     }
@@ -201,7 +200,7 @@ export class FourthMap extends Phaser.Scene {
     }
 
     // 4. 애니메이션이 완료되었고, 다음 메시지가 남아있을 때: 다음 메시지 로드
-    if (this.#dialogUi.moreMessagesToShow) {
+    if (!this.#dialogUi.isAnimationPlaying && this.#dialogUi.moreMessagesToShow) {
       this.#dialogUi.showNextMessage();
       return;
     }

@@ -36,8 +36,6 @@ const TILED_NPC_PROPERTY = Object.freeze({
   SPRITE_KEY: 'spriteKey',      // ← 추가
 });
 
-let lastCollected;
-
 
 export class ThirdMap extends Phaser.Scene {
     /** @type {Player} */
@@ -64,6 +62,9 @@ export class ThirdMap extends Phaser.Scene {
     #entryAreas = [];             // 출구 영역
     _canEntry = false;      // 이 맵에서 아이템 수집 완료했는지
 
+    /** @type {{ key: string, name: string, img: string } | null} */
+    #lastCollected = null; // 인스턴스 변수로 변경 및 초기화
+
     constructor(){
       super({
           key: SCENE_KEYS.THIRD_MAP
@@ -79,12 +80,33 @@ export class ThirdMap extends Phaser.Scene {
         this._initialPosition = data?.spawnPosition || null;
         this._initialDirection = data?.spawnDirection || DIRECTION.UP;
     }
+
+    _handleResume(sys, data) {
+      this.#lastCollected = data?.collectedItem;
+      if (!this.#lastCollected) return;
+      // console.log(`${this.#lastCollected.name} 수집햇나????`) 
+
+      this._canExit = true;
+    
+      this.time.delayedCall(300, () => {
+        // console.log(`${this.#lastCollected.name} 수집햇더요 ㅎ`)
+        this.#dialogUi.showDialogModal([`설화를 통해 ${this.#lastCollected.name}에 대해 배웠다! 그럼 다음 마을로 가볼까?`]);
+        console.log(this.#lastCollected);
+        console.log(this.#lastCollected. name);
+        this.add.image(2392,519,this.#lastCollected.img).setOrigin(0).setScale(4);
+      });
+    }
+    
     
     // 배경 등 형성하는 부분
     create(){
         console.log(`[${ThirdMap.name}:create] invoked`);
 
         // map json info
+        this.#lastCollected = null;
+        this._canExit = false;
+        this._isTransitioning = false;
+
         const map = this.make.tilemap({ key: MAP3_ASSET_KEYS.TM_MAIN_LEVEL });
         const collisionTiles = map.addTilesetImage('collision', MAP3_ASSET_KEYS.TM_COLLISION);
         if (!collisionTiles){
@@ -159,7 +181,7 @@ export class ThirdMap extends Phaser.Scene {
         const alreadyCollected = inv.find(i => i.sourceTaleId === MAP3_TALE_ID);
 
         if (alreadyCollected) {
-          lastCollected = alreadyCollected;
+          this.#lastCollected = alreadyCollected;
           this._canExit = true;
         }
 
@@ -179,21 +201,8 @@ export class ThirdMap extends Phaser.Scene {
             dataManager.store.set(DATA_MANAGER_STORE_KEYS.MAP3_WELCOME_KEY, true);
         }
 
-        this.events.on('resume', (sys, data) => {
-          lastCollected = data?.collectedItem;
-          if (!lastCollected) return;
-          // console.log(`${lastCollected.name} 수집햇나????`) 
-
-          this._canExit = true;
-        
-          this.time.delayedCall(300, () => {
-            // console.log(`${lastCollected.name} 수집햇더요 ㅎ`)
-            this.#dialogUi.showDialogModal([`설화를 통해 ${lastCollected.name}에 대해 배웠다! 그럼 다음 마을로 가볼까?`]);
-            console.log(lastCollected);
-            console.log(lastCollected. name);
-            this.add.image(2392,519,lastCollected.img).setOrigin(0).setScale(4);
-          });
-        });
+        this.events.off('resume', this._handleResume, this); 
+        this.events.on('resume', this._handleResume, this);
 
     }
 
@@ -268,7 +277,7 @@ export class ThirdMap extends Phaser.Scene {
       console.log('talking to npc')
       if (nearbyNpc.facePlayer) nearbyNpc.facePlayer(this.#player.direction);
 
-      if (lastCollected){
+      if (this.#lastCollected){
         this.#dialogUi.showDialogModal(['마을당 이야기는 하나만 수집할 수 있단다.\n아쉬워도 다음 단계로 가봐야지!']);
       } else{
         this.#dialogUi.showDialogModal(nearbyNpc.messages, {

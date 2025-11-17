@@ -36,8 +36,6 @@ const TILED_NPC_PROPERTY = Object.freeze({
   SPRITE_KEY: 'spriteKey',     
 });
 
-let lastCollected;
-
 
 export class FirstMap extends Phaser.Scene {
     /** @type {Player} */
@@ -62,6 +60,9 @@ export class FirstMap extends Phaser.Scene {
     #entryAreas = [];             // 출구 영역
     _canEntry = false;      // 이 맵에서 아이템 수집 완료했는지
 
+    /** @type {{ key: string, name: string, img: string } | null} */
+    #lastCollected = null; // 인스턴스 변수로 변경 및 초기화
+
     constructor(){
       super({
           key: SCENE_KEYS.FIRST_MAP
@@ -75,6 +76,22 @@ export class FirstMap extends Phaser.Scene {
     init(data) {
         this._shouldShowIntro = !!data?.intro;
     }
+
+    _handleResume(sys, data) {
+      this.#lastCollected = data?.collectedItem;
+      if (!this.#lastCollected || !this.#lastCollected.name) return;
+      
+      console.log(`수집 후 1 ${this._canExit}`);
+      this._canExit = true; 
+    
+      this.time.delayedCall(300, () => {
+        this.#dialogUi.showDialogModal([`설화를 통해 ${this.#lastCollected.name}에 대해 배웠다! 그럼 다음 마을로 가볼까?`]);
+        console.log(this.#lastCollected);
+        console.log(this.#lastCollected.name);
+        console.log(`수집 후 2 ${this._canExit}`);
+        this.add.image(2392,127,this.#lastCollected.img).setOrigin(0).setScale(4);
+      });
+    }
     
     // 배경 등 형성하는 부분
     create(){
@@ -84,6 +101,11 @@ export class FirstMap extends Phaser.Scene {
         const y = 19 * TILE_SIZE; 
 
         // map json info
+        dataManager.store.set(DATA_MANAGER_STORE_KEYS.INVENTORY, []);
+        this.#lastCollected = null;
+        this._canExit = false;
+        this._isTransitioning = false;
+
         const map = this.make.tilemap({ key: MAP1_ASSET_KEYS.FM_MAIN_LEVEL });
         const collisionTiles = map.addTilesetImage('collision', MAP1_ASSET_KEYS.FM_COLLISION);
         if (!collisionTiles){
@@ -96,29 +118,6 @@ export class FirstMap extends Phaser.Scene {
             return;
         }
         collisionLayer.setAlpha(TILED_COLLISION_LAYER_ALPHA).setDepth(2).setScale(4);
-
-        // console.log('Collision Layer successfully loaded at X:', collisionLayer.x, 'Y:', collisionLayer.y);
-        // create interactive layer
-
-        // this.#signLayer = map.getObjectLayer('SIGNS');
-        // if (!this.#signLayer) {
-        //   console.log(`[${FirstMap.name}:create] encountered error while creating sign layer using data from tiled`);
-        //   return;
-        // }
-
-        // create collision layer for encounters
-        // const encounterTiles = map.addTilesetImage('encounter', MAP1_ASSET_KEYS.FM_ENCOUNTER);
-        // if (!encounterTiles) {
-        //   console.log(`[${FirstMap.name}:create] encountered error while creating encounter tiles from tiled`);
-        //   return;
-        // }
-        // this.#encounterLayer = map.createLayer('NPC', encounterTiles, 0, 0);
-        // if (!this.#encounterLayer) {
-        //   console.log(`[${FirstMap.name}:create] encountered error while creating encounter layer using data from tiled`);
-        //   return;
-        // }
-        // this.#encounterLayer.setAlpha(TILED_COLLISION_LAYER_ALPHA).setDepth(2).setScale(4);
-
 
         this.add.image(0, 0, MAP1_ASSET_KEYS.FIRST_MAP).setOrigin(0).setScale(4);
 
@@ -153,21 +152,10 @@ export class FirstMap extends Phaser.Scene {
             dataManager.store.set(DATA_MANAGER_STORE_KEYS.MAP1_WELCOME_KEY, true);
         }
 
-        this.events.on('resume', (sys, data) => {
-          lastCollected = data?.collectedItem;
-          if (!lastCollected) return;
-          // console.log(`${lastCollected.name} 수집햇나????`) 
+        console.log(`수집 전 ${this._canExit} ${this.#lastCollected}`);
 
-          this._canExit = true;
-        
-          this.time.delayedCall(300, () => {
-            // console.log(`${lastCollected.name} 수집햇더요 ㅎ`)
-            this.#dialogUi.showDialogModal([`설화를 통해 ${lastCollected.name}에 대해 배웠다! 그럼 다음 마을로 가볼까?`]);
-            console.log(lastCollected);
-            console.log(lastCollected. name);
-            this.add.image(2392,127,lastCollected.img).setOrigin(0).setScale(4);
-          });
-        });
+        this.events.off('resume', this._handleResume, this); 
+        this.events.on('resume', this._handleResume, this);
 
     }
 
@@ -241,7 +229,7 @@ export class FirstMap extends Phaser.Scene {
       console.log('talking to npc')
       if (nearbyNpc.facePlayer) nearbyNpc.facePlayer(this.#player.direction);
 
-      if (lastCollected){
+      if (this.#lastCollected){
         this.#dialogUi.showDialogModal(['마을당 이야기는 하나만 수집할 수 있단다.\n아쉬워도 다음 단계로 가봐야지!']);
       } else{
         this.#dialogUi.showDialogModal(nearbyNpc.messages, {

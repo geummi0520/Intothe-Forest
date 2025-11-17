@@ -2,6 +2,7 @@
 import Phaser from "phaser";
 import { SCENE_KEYS } from "./SceneKeys";
 import { END_ASSET_KEYS, INTRO_ASSET_KEYS } from "../assets/AssetKeys";
+import { dataManager } from "../utils/data-manager";
 
 export class EndScene extends Phaser.Scene {
   /** @type {Phaser.GameObjects.Image} */
@@ -17,6 +18,7 @@ export class EndScene extends Phaser.Scene {
   constructor() {
     super({ key: SCENE_KEYS.END_SCENE });
   }
+
 
   create() {
     const { width, height } = this.scale;
@@ -116,6 +118,7 @@ export class EndScene extends Phaser.Scene {
     if (this.#onResize) this.scale.off("resize", this.#onResize);
     this.cameras.main.fadeOut(250, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      dataManager.reset();
       this.scene.start(SCENE_KEYS.START_SCENE, { intro: true });
     });
   }
