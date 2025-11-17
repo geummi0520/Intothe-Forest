@@ -51,6 +51,8 @@ export class FirstMap extends Phaser.Scene {
     /** @type {NPC[]} */
     #npcs;
 
+    #interactionCooldown = 0; // [새로 추가] 상호작용 쿨다운 시간
+
     /** @type {Phaser.Geom.Rectangle[]} */
     #exitAreas = [];             // 출구 영역
     _canExit = false;      // 이 맵에서 아이템 수집 완료했는지
@@ -161,9 +163,13 @@ export class FirstMap extends Phaser.Scene {
 
     /**
    * @param {DOMHighResTimeStamp} time
+   * @param {number} delta // ⬅️ delta 인수를 추가합니다.
    * @returns {void}
    */
-  update(time) {
+  update(time,delta) {
+    if (this.#interactionCooldown > 0){
+      this.#interactionCooldown -= delta;
+    }
     if (!this.#controls || !this.#player) {
       // this.#player.update(time);
       return;
@@ -173,6 +179,12 @@ export class FirstMap extends Phaser.Scene {
     const selectedDirection = this.#controls.getDirectionKeyPressedDown();
     if (!this.#dialogUi?.shouldBlockMovement?.() && selectedDirection !== DIRECTION.NONE) {
       this.#player.moveCharacter(selectedDirection);
+    }
+
+    if (this.#controls.wasSpaceKeyPressed() && !this.#player.isMoving && this.#interactionCooldown <= 0) { 
+      // 쿨다운을 설정하여 연타(Mashing) 방지 (200ms)
+      this.#interactionCooldown = 200;
+      this.#handlePlayerInteraction();
     }
 
     // 2) 스페이스는 기존대로 (대화 넘기기/인터랙션)
@@ -261,7 +273,9 @@ export class FirstMap extends Phaser.Scene {
                   label: '아니오',
                   onSelect: () => {
                     this.#dialogUi.showDialogModal(['아쉽네.. 다음에 들려줄게!']);
+                    this.#interactionCooldown = 350;
                   }
+
                 }
               ],
             });
