@@ -174,7 +174,7 @@ export class SecondMap extends Phaser.Scene {
         });
 
 
-        this.add.image(0,0,MAP2_ASSET_KEYS.SM_FOREQROUND).setOrigin(1).setScale(4);
+        this.add.image(0,0,MAP2_ASSET_KEYS.SM_FOREQROUND).setOrigin(0).setScale(4).setDepth(999);
         this.add.image(0,0,UI_ASSET_KEYS.ITEM_INVENTORY).setOrigin(0).setScale(0.5);
 
         // 🔽 여기부터 추가
