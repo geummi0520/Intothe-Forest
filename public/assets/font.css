@@ -1,6 +1,7 @@
 @font-face {
     font-family: 'DungGeunMo';
-    src: url('/assets/DungGeunMo.woff') format('woff'),
+    src:local('DungGeunMo'),  
+        url('/assets/DungGeunMo.woff') format('woff'),
         url('/assets/DungGeunMo.woff2') format('woff2'),
         url('/assets/DungGeunMo.ttf') format('truetype');
     font-weight: 100 900; /* 1~1000 범위 지정 */
